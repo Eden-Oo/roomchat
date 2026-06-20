@@ -10,8 +10,54 @@ const io = new Server(server);
 // Serve the static frontend from public/
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ---------- In-memory state ----------
+// rooms: Map<roomName, Map<socketId, username>>
+const rooms = new Map();
+
+function getRoom(room) {
+  if (!rooms.has(room)) rooms.set(room, new Map());
+  return rooms.get(room);
+}
+
+function usernameTaken(room, username) {
+  const members = rooms.get(room);
+  if (!members) return false;
+  const lower = username.toLowerCase();
+  for (const name of members.values()) {
+    if (name.toLowerCase() === lower) return true;
+  }
+  return false;
+}
+
+function userList(room) {
+  const members = rooms.get(room);
+  return members ? Array.from(members.values()) : [];
+}
+
+// ---------- Socket.IO ----------
 io.on('connection', (socket) => {
-  // Socket.IO wiring is added in later tasks (T3+).
+  socket.on('joinRoom', (payload) => {
+    const username = (payload && typeof payload.username === 'string') ? payload.username.trim() : '';
+    const room = (payload && typeof payload.room === 'string') ? payload.room.trim() : '';
+
+    if (!username || !room) {
+      socket.emit('joinError', 'Username and room are required.');
+      return;
+    }
+    if (usernameTaken(room, username)) {
+      socket.emit('joinError', `The name "${username}" is already taken in #${room}.`);
+      return;
+    }
+
+    // Join the Socket.IO room (created implicitly if new) and record the user.
+    socket.join(room);
+    socket.data.username = username;
+    socket.data.room = room;
+    getRoom(room).set(socket.id, username);
+
+    // Confirm to the joining client.
+    socket.emit('joined', { room, username });
+  });
 });
 
 const PORT = process.env.PORT || 3000;

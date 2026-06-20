@@ -3,10 +3,18 @@
 
   // ---------- Elements ----------
   const lobby = document.getElementById('lobby');
+  const chat = document.getElementById('chat');
   const lobbyForm = document.getElementById('lobby-form');
   const usernameInput = document.getElementById('username');
   const roomInput = document.getElementById('room');
   const lobbyError = document.getElementById('lobby-error');
+  const roomNameEl = document.getElementById('room-name');
+  const meNameEl = document.getElementById('me-name');
+
+  // ---------- State ----------
+  let socket = null;
+  let me = null;
+  let currentRoom = null;
 
   // ---------- Lobby validation + submit ----------
   lobbyForm.addEventListener('submit', function (e) {
@@ -32,12 +40,34 @@
       return;
     }
 
-    // Valid input — joining is wired up in T3.
     joinRoom(username, room);
   });
 
-  // Placeholder until T3 wires Socket.IO.
   function joinRoom(username, room) {
-    // no-op for T2
+    // Connect to the same origin that served the page (works locally and on Render).
+    if (!socket) {
+      socket = io();
+      registerSocketHandlers();
+    }
+    socket.emit('joinRoom', { username: username, room: room });
+  }
+
+  function registerSocketHandlers() {
+    socket.on('joinError', function (message) {
+      lobbyError.textContent = message || 'Could not join the room.';
+    });
+
+    socket.on('joined', function (data) {
+      me = data.username;
+      currentRoom = data.room;
+      showChatView(data.room, data.username);
+    });
+  }
+
+  function showChatView(room, username) {
+    roomNameEl.textContent = room;
+    meNameEl.textContent = username;
+    lobby.classList.add('hidden');
+    chat.classList.remove('hidden');
   }
 })();
