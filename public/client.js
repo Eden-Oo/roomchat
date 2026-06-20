@@ -13,6 +13,7 @@
   const messagesEl = document.getElementById('messages');
   const messageForm = document.getElementById('message-form');
   const messageInput = document.getElementById('message-input');
+  const usersEl = document.getElementById('users');
 
   // ---------- State ----------
   let socket = null;
@@ -69,6 +70,31 @@
     socket.on('chatMessage', function (msg) {
       renderMessage(msg);
     });
+
+    socket.on('systemNotice', function (notice) {
+      renderSystemNotice(notice);
+    });
+
+    socket.on('userList', function (users) {
+      renderUserList(users);
+    });
+  }
+
+  function renderUserList(users) {
+    usersEl.innerHTML = '';
+    (users || []).forEach(function (name) {
+      const li = document.createElement('li');
+      li.textContent = name;
+      usersEl.appendChild(li);
+    });
+  }
+
+  function renderSystemNotice(notice) {
+    const li = document.createElement('li');
+    li.className = 'msg system';
+    li.textContent = notice.text + ' · ' + formatTime(notice.ts);
+    messagesEl.appendChild(li);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   // ---------- Messaging ----------
