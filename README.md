@@ -71,7 +71,7 @@ This project was built by Claude Code working a **loop prompt** — a spec broke
 
 **Kickoff prompt** (paste this to start the loop in Claude Code):
 
-> Read the file `roomchat-loop-prompt.md` in this folder. Follow the instructions in its "THE LOOP PROMPT" section to build the roomchat app — work one task at a time from PROJECT_SPEC, verify each task against its acceptance criteria, update PROGRESS as you go, and keep looping until all tasks (T1–T8) are done. Start now.
+> Read the file `roomchat-loop-prompt-clean.md` in this folder. Follow the instructions in its "THE LOOP PROMPT" section to build the roomchat app — work one task at a time from PROJECT_SPEC, verify each task against its acceptance criteria, update PROGRESS as you go, and keep looping until all tasks (T1–T8) are done. Start now.
 
 ## Possible next steps (out of scope here)
 
