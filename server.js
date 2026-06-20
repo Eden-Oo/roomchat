@@ -81,6 +81,14 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('typing', (isTyping) => {
+    const room = socket.data.room;
+    const username = socket.data.username;
+    if (!room || !username) return;
+    // Tell everyone else in the room about this user's typing state.
+    socket.to(room).emit('typing', { username, isTyping: !!isTyping });
+  });
+
   socket.on('disconnect', () => {
     const room = socket.data.room;
     const username = socket.data.username;
@@ -90,6 +98,7 @@ io.on('connection', (socket) => {
     if (members) {
       members.delete(socket.id);
       // Tell the rest of the room who left and refresh their user list.
+      socket.to(room).emit('typing', { username, isTyping: false });
       socket.to(room).emit('systemNotice', systemNotice(`${username} left`));
       io.to(room).emit('userList', userList(room));
       // Clean up empty rooms so memory doesn't grow without bound.

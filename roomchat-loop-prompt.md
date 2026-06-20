@@ -84,7 +84,7 @@ Authentication/passwords, private/DM messages, message persistence, file uploads
 - [x] T4 — Real-time messaging — **DONE**
 - [x] T5 — Presence + join/leave — **DONE**
 - [x] T6 — Disconnect handling — **DONE**
-- [ ] T7 — Polish — **TODO**
+- [x] T7 — Polish — **DONE**
 - [ ] T8 — Render.com deployment readiness — **TODO**
 
 Notes / decisions log:
@@ -94,6 +94,7 @@ Notes / decisions log:
 - T4: chatMessage trimmed/empty-ignored, io.to(room) broadcast incl. sender; client renders sender+text+HH:MM, own msgs styled .mine, textContent prevents injection, Enter/Send both submit. Verified 3 clients: broadcast, trim, empty-ignore, ts present, #other isolated.
 - T5: userList emitted to room on join/leave; systemNotice "x joined"/"x left" to others; disconnect removes member. Sidebar list + italic system messages on client. Verified two clients: list grows/shrinks, both notices fire, member removed on close.
 - T6: disconnect deletes empty room from `rooms` Map; server.js now exports {app,server,io,rooms} and only listens when run directly. Verified by requiring server in-process: member removed, emptied room deleted, rooms.size==0. npm start still serves /.
+- T7: typing indicator (debounced emit, relayed to others, cleared on send/idle/disconnect); responsive @media CSS; sanitization via textContent (no innerHTML on user data); README with run + Render deploy steps. Verified typing relay both states + injection payload carried verbatim.
 
 ---
 

@@ -14,11 +14,15 @@
   const messageForm = document.getElementById('message-form');
   const messageInput = document.getElementById('message-input');
   const usersEl = document.getElementById('users');
+  const typingEl = document.getElementById('typing');
 
   // ---------- State ----------
   let socket = null;
   let me = null;
   let currentRoom = null;
+  let typingUsers = new Set();
+  let amTyping = false;
+  let typingTimer = null;
 
   // ---------- Lobby validation + submit ----------
   lobbyForm.addEventListener('submit', function (e) {
@@ -78,6 +82,32 @@
     socket.on('userList', function (users) {
       renderUserList(users);
     });
+
+    socket.on('typing', function (data) {
+      if (!data || !data.username) return;
+      if (data.isTyping) typingUsers.add(data.username);
+      else typingUsers.delete(data.username);
+      renderTyping();
+    });
+  }
+
+  function renderTyping() {
+    const names = Array.from(typingUsers);
+    if (names.length === 0) {
+      typingEl.textContent = '';
+    } else if (names.length === 1) {
+      typingEl.textContent = names[0] + ' is typing…';
+    } else if (names.length === 2) {
+      typingEl.textContent = names[0] + ' and ' + names[1] + ' are typing…';
+    } else {
+      typingEl.textContent = 'Several people are typing…';
+    }
+  }
+
+  function setTyping(state) {
+    if (state === amTyping) return;
+    amTyping = state;
+    if (socket) socket.emit('typing', state);
   }
 
   function renderUserList(users) {
@@ -104,7 +134,22 @@
     if (!text || !socket) return; // ignore empty sends
     socket.emit('chatMessage', { text: text });
     messageInput.value = '';
+    clearTimeout(typingTimer);
+    setTyping(false); // stop the indicator once the message is sent
     messageInput.focus();
+  });
+
+  // Emit typing state as the user types, auto-clearing after a short idle.
+  messageInput.addEventListener('input', function () {
+    if (!socket) return;
+    if (messageInput.value.trim().length > 0) {
+      setTyping(true);
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(function () { setTyping(false); }, 1500);
+    } else {
+      clearTimeout(typingTimer);
+      setTyping(false);
+    }
   });
 
   function formatTime(ts) {
