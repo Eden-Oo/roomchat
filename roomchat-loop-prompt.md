@@ -85,7 +85,7 @@ Authentication/passwords, private/DM messages, message persistence, file uploads
 - [x] T5 — Presence + join/leave — **DONE**
 - [x] T6 — Disconnect handling — **DONE**
 - [x] T7 — Polish — **DONE**
-- [ ] T8 — Render.com deployment readiness — **TODO**
+- [x] T8 — Render.com deployment readiness — **DONE**
 
 Notes / decisions log:
 - T1: scaffold with express + socket.io; server binds 0.0.0.0 on PORT||3000; serves public/. Verified npm install + npm start (logs port) + GET / returns 200.
@@ -95,6 +95,7 @@ Notes / decisions log:
 - T5: userList emitted to room on join/leave; systemNotice "x joined"/"x left" to others; disconnect removes member. Sidebar list + italic system messages on client. Verified two clients: list grows/shrinks, both notices fire, member removed on close.
 - T6: disconnect deletes empty room from `rooms` Map; server.js now exports {app,server,io,rooms} and only listens when run directly. Verified by requiring server in-process: member removed, emptied room deleted, rooms.size==0. npm start still serves /.
 - T7: typing indicator (debounced emit, relayed to others, cleared on send/idle/disconnect); responsive @media CSS; sanitization via textContent (no innerHTML on user data); README with run + Render deploy steps. Verified typing relay both states + injection payload carried verbatim.
+- T8: render.yaml (web/node/free, buildCommand npm install, startCommand npm start, healthCheckPath /); client uses bare io() (no localhost); PORT/0.0.0.0 + node_modules gitignored confirmed; README has Deploy to Render + free-tier caveats. Final e2e PASS: two tabs chat, presence, typing, isolation, dup-reject.
 
 ---
 
