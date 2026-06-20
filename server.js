@@ -92,12 +92,20 @@ io.on('connection', (socket) => {
       // Tell the rest of the room who left and refresh their user list.
       socket.to(room).emit('systemNotice', systemNotice(`${username} left`));
       io.to(room).emit('userList', userList(room));
+      // Clean up empty rooms so memory doesn't grow without bound.
+      if (members.size === 0) rooms.delete(room);
     }
   });
 });
 
-const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
-server.listen(PORT, HOST, () => {
-  console.log(`roomchat server listening on http://${HOST}:${PORT}`);
-});
+// Start listening only when run directly (`npm start`); when required by a
+// test the caller controls the lifecycle and can inspect `rooms`.
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  const HOST = '0.0.0.0';
+  server.listen(PORT, HOST, () => {
+    console.log(`roomchat server listening on http://${HOST}:${PORT}`);
+  });
+}
+
+module.exports = { app, server, io, rooms };
