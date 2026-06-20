@@ -15,6 +15,7 @@
   const messageInput = document.getElementById('message-input');
   const usersEl = document.getElementById('users');
   const typingEl = document.getElementById('typing');
+  const leaveBtn = document.getElementById('leave-btn');
 
   // ---------- State ----------
   let socket = null;
@@ -50,6 +51,29 @@
 
     joinRoom(username, room);
   });
+
+  // ---------- Leave ----------
+  leaveBtn.addEventListener('click', function () {
+    if (socket) socket.emit('leaveRoom');
+    showLobbyView();
+  });
+
+  function showLobbyView() {
+    // Reset client state and return to the lobby so the user can join again.
+    clearTimeout(typingTimer);
+    amTyping = false;
+    me = null;
+    currentRoom = null;
+    typingUsers = new Set();
+    messagesEl.innerHTML = '';
+    usersEl.innerHTML = '';
+    typingEl.textContent = '';
+    messageInput.value = '';
+    lobbyError.textContent = '';
+    chat.classList.add('hidden');
+    lobby.classList.remove('hidden');
+    usernameInput.focus();
+  }
 
   function joinRoom(username, room) {
     // Connect to the same origin that served the page (works locally and on Render).

@@ -38,6 +38,29 @@ function systemNotice(text) {
   return { system: true, text, ts: Date.now() };
 }
 
+// Remove a socket from its room and announce the departure. Shared by the
+// explicit "leaveRoom" event and the implicit "disconnect" (tab close).
+function leaveCurrentRoom(socket) {
+  const room = socket.data.room;
+  const username = socket.data.username;
+  if (!room || !username) return; // never joined a room
+
+  const members = rooms.get(room);
+  if (members) {
+    members.delete(socket.id);
+    // Tell the rest of the room who left and refresh their user list.
+    socket.to(room).emit('typing', { username, isTyping: false });
+    socket.to(room).emit('systemNotice', systemNotice(`${username} left`));
+    io.to(room).emit('userList', userList(room));
+    // Clean up empty rooms so memory doesn't grow without bound.
+    if (members.size === 0) rooms.delete(room);
+  }
+
+  socket.leave(room);
+  socket.data.room = null;
+  socket.data.username = null;
+}
+
 // ---------- Socket.IO ----------
 io.on('connection', (socket) => {
   socket.on('joinRoom', (payload) => {
@@ -89,21 +112,14 @@ io.on('connection', (socket) => {
     socket.to(room).emit('typing', { username, isTyping: !!isTyping });
   });
 
-  socket.on('disconnect', () => {
-    const room = socket.data.room;
-    const username = socket.data.username;
-    if (!room || !username) return; // never joined a room
+  // Explicit "Leave" button: clean up but keep the socket connected so the
+  // client can return to the lobby and join another room.
+  socket.on('leaveRoom', () => {
+    leaveCurrentRoom(socket);
+  });
 
-    const members = rooms.get(room);
-    if (members) {
-      members.delete(socket.id);
-      // Tell the rest of the room who left and refresh their user list.
-      socket.to(room).emit('typing', { username, isTyping: false });
-      socket.to(room).emit('systemNotice', systemNotice(`${username} left`));
-      io.to(room).emit('userList', userList(room));
-      // Clean up empty rooms so memory doesn't grow without bound.
-      if (members.size === 0) rooms.delete(room);
-    }
+  socket.on('disconnect', () => {
+    leaveCurrentRoom(socket);
   });
 });
 
