@@ -4,6 +4,8 @@ Real-time chat rooms built with **Node.js + Express + Socket.IO**. Pick a userna
 
 ![stack](https://img.shields.io/badge/node-%3E%3D18-43853d) ![socket.io](https://img.shields.io/badge/realtime-socket.io-black)
 
+**🔴 Live demo: [roomchat-bmla.onrender.com](https://roomchat-bmla.onrender.com/)** — hosted on Render's free tier, so the first load after idle may take ~30s while the service wakes up.
+
 ## Features
 
 - Username + room lobby with client-side validation
