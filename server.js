@@ -58,6 +58,22 @@ io.on('connection', (socket) => {
     // Confirm to the joining client.
     socket.emit('joined', { room, username });
   });
+
+  socket.on('chatMessage', (raw) => {
+    const room = socket.data.room;
+    const username = socket.data.username;
+    if (!room || !username) return; // not in a room yet
+
+    const text = (typeof raw === 'string' ? raw : (raw && raw.text) || '').trim();
+    if (!text) return; // ignore empty sends
+
+    // Broadcast to everyone in this room only (including the sender).
+    io.to(room).emit('chatMessage', {
+      username,
+      text,
+      ts: Date.now(),
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3000;

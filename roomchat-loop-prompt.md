@@ -81,7 +81,7 @@ Authentication/passwords, private/DM messages, message persistence, file uploads
 - [x] T1 — Project scaffold — **DONE**
 - [x] T2 — Lobby screen — **DONE**
 - [x] T3 — Join/create room — **DONE**
-- [ ] T4 — Real-time messaging — **TODO**
+- [x] T4 — Real-time messaging — **DONE**
 - [ ] T5 — Presence + join/leave — **TODO**
 - [ ] T6 — Disconnect handling — **TODO**
 - [ ] T7 — Polish — **TODO**
@@ -91,6 +91,7 @@ Notes / decisions log:
 - T1: scaffold with express + socket.io; server binds 0.0.0.0 on PORT||3000; serves public/. Verified npm install + npm start (logs port) + GET / returns 200.
 - T2: lobby (username+room+button), dark CSS, client-side trim/required validation with inline error. Verified markup served + real submit handler exercised via DOM stub (empty/whitespace blocked, valid passes).
 - T3: server in-memory rooms Map<room, Map<socketId, username>>; joinRoom validates + rejects duplicate username (case-insensitive) per room; client connects via io() (same-origin) and switches to chat view. Verified with two socket.io-client tabs (--no-save test dep).
+- T4: chatMessage trimmed/empty-ignored, io.to(room) broadcast incl. sender; client renders sender+text+HH:MM, own msgs styled .mine, textContent prevents injection, Enter/Send both submit. Verified 3 clients: broadcast, trim, empty-ignore, ts present, #other isolated.
 
 ---
 

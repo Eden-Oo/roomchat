@@ -10,6 +10,9 @@
   const lobbyError = document.getElementById('lobby-error');
   const roomNameEl = document.getElementById('room-name');
   const meNameEl = document.getElementById('me-name');
+  const messagesEl = document.getElementById('messages');
+  const messageForm = document.getElementById('message-form');
+  const messageInput = document.getElementById('message-input');
 
   // ---------- State ----------
   let socket = null;
@@ -62,6 +65,55 @@
       currentRoom = data.room;
       showChatView(data.room, data.username);
     });
+
+    socket.on('chatMessage', function (msg) {
+      renderMessage(msg);
+    });
+  }
+
+  // ---------- Messaging ----------
+  messageForm.addEventListener('submit', function (e) {
+    e.preventDefault(); // Enter (submit) and the Send button both trigger this
+    const text = messageInput.value.trim();
+    if (!text || !socket) return; // ignore empty sends
+    socket.emit('chatMessage', { text: text });
+    messageInput.value = '';
+    messageInput.focus();
+  });
+
+  function formatTime(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return hh + ':' + mm;
+  }
+
+  function renderMessage(msg) {
+    const li = document.createElement('li');
+    li.className = 'msg' + (msg.username === me ? ' mine' : '');
+
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+
+    const sender = document.createElement('span');
+    sender.className = 'sender';
+    sender.textContent = msg.username;
+
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = ' · ' + formatTime(msg.ts);
+
+    meta.appendChild(sender);
+    meta.appendChild(time);
+
+    const text = document.createElement('span');
+    text.className = 'text';
+    text.textContent = msg.text; // textContent prevents HTML injection
+
+    li.appendChild(meta);
+    li.appendChild(text);
+    messagesEl.appendChild(li);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   function showChatView(room, username) {
