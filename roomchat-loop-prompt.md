@@ -79,7 +79,7 @@ Authentication/passwords, private/DM messages, message persistence, file uploads
 *(The agent updates this every iteration. Status: TODO / DOING / DONE / BLOCKED.)*
 
 - [x] T1 — Project scaffold — **DONE**
-- [ ] T2 — Lobby screen — **TODO**
+- [x] T2 — Lobby screen — **DONE**
 - [ ] T3 — Join/create room — **TODO**
 - [ ] T4 — Real-time messaging — **TODO**
 - [ ] T5 — Presence + join/leave — **TODO**
@@ -89,6 +89,7 @@ Authentication/passwords, private/DM messages, message persistence, file uploads
 
 Notes / decisions log:
 - T1: scaffold with express + socket.io; server binds 0.0.0.0 on PORT||3000; serves public/. Verified npm install + npm start (logs port) + GET / returns 200.
+- T2: lobby (username+room+button), dark CSS, client-side trim/required validation with inline error. Verified markup served + real submit handler exercised via DOM stub (empty/whitespace blocked, valid passes).
 
 ---
 

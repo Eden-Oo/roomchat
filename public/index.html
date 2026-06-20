@@ -2,10 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>roomchat</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>roomchat</h1>
-  <p>Scaffold is running.</p>
+  <main class="app">
+    <!-- Lobby view -->
+    <section id="lobby" class="view lobby">
+      <h1 class="brand">roomchat</h1>
+      <p class="tagline">Pick a username, join a room, chat live.</p>
+      <form id="lobby-form" class="lobby-form" autocomplete="off" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" maxlength="24" placeholder="e.g. alice" />
+
+        <label for="room">Room name</label>
+        <input id="room" name="room" type="text" maxlength="32" placeholder="e.g. test" />
+
+        <button type="submit" class="btn-primary">Join / Create Room</button>
+        <p id="lobby-error" class="error" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- Chat view (revealed after joining) -->
+    <section id="chat" class="view chat hidden">
+      <header class="chat-header">
+        <div>
+          <h2 class="room-title">#<span id="room-name"></span></h2>
+          <span class="me">you are <strong id="me-name"></strong></span>
+        </div>
+        <button id="leave-btn" class="btn-secondary" type="button">Leave</button>
+      </header>
+
+      <div class="chat-body">
+        <ul id="messages" class="messages" aria-live="polite"></ul>
+        <aside class="sidebar">
+          <h3>In this room</h3>
+          <ul id="users" class="users"></ul>
+        </aside>
+      </div>
+
+      <div id="typing" class="typing" aria-live="polite"></div>
+
+      <form id="message-form" class="message-form" autocomplete="off">
+        <input id="message-input" name="message" type="text" placeholder="Type a message…" maxlength="1000" autocomplete="off" />
+        <button type="submit" class="btn-primary">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
 </body>
 </html>
