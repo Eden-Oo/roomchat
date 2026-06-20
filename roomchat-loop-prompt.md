@@ -10,10 +10,6 @@ This file is written to be handed to **Claude Code** as a *loop*, not a one-shot
 
 How to use: in Claude Code, create the project folder, drop this file in as `LOOP.md` (or split it into `PROJECT_SPEC.md` + `PROGRESS.md`), then paste **THE LOOP PROMPT** section as your message.
 
-### Kickoff prompt (paste this to start)
-
-> Read the file `roomchat-loop-prompt.md` in this folder. Follow the instructions in its "THE LOOP PROMPT" section to build the roomchat app — work one task at a time from PROJECT_SPEC, verify each task against its acceptance criteria, update PROGRESS as you go, and keep looping until all tasks (T1–T8) are done. Start now.
-
 ---
 
 ## PROJECT_SPEC
