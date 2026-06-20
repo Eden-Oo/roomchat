@@ -62,6 +62,13 @@ This app is ready to deploy on [Render.com](https://render.com) as a Node **Web 
 - The service **spins down after ~15 minutes of inactivity**, so the first request after idle is slow while it wakes up.
 - Because rooms and users are stored **in memory**, they **reset whenever the service restarts or spins down**.
 
+## How this app was built
+
+This project was built by Claude Code working a **loop prompt** — a spec broken into discrete tasks (T1–T8), each with acceptance criteria, verified and committed one at a time. The prompt is included for reference:
+
+- [`roomchat-loop-prompt.md`](roomchat-loop-prompt.md) — the full loop prompt (PROJECT_SPEC + PROGRESS + THE LOOP PROMPT)
+- [`roomchat-loop-prompt-clean.md`](roomchat-loop-prompt-clean.md) — cleaned-up version
+
 ## Possible next steps (out of scope here)
 
 - Authentication / passwords
