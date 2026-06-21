@@ -1,6 +1,6 @@
 # roomchat
 
-Real-time chat rooms built with **Node.js + Express + Socket.IO**, with optional **MongoDB** message history. Pick a username, join (or create) a room by name, and chat live with everyone in that room. When a database is configured, the last messages in a room are replayed to anyone who joins; without one, the app still runs as a live in-memory chat.
+Real-time chat rooms built with **Node.js + Express + Socket.IO**, with **MongoDB** message history. Pick a username, join (or create) a room by name, and chat live with everyone in that room. The last messages in a room are replayed to anyone who joins, so conversations survive restarts.
 
 ![stack](https://img.shields.io/badge/node-%3E%3D18-43853d) ![socket.io](https://img.shields.io/badge/realtime-socket.io-black)
 
@@ -17,7 +17,7 @@ Real-time chat rooms built with **Node.js + Express + Socket.IO**, with optional
 - Duplicate usernames rejected **within the same room**
 - Message text is escaped, so pasting `<script>…</script>` renders as plain text
 - Empty rooms are cleaned up from memory on disconnect
-- **Optional persistent history** — with MongoDB configured, the last `HISTORY_LIMIT` (default 50) messages are replayed when you join a room
+- **Persistent history** — the last `HISTORY_LIMIT` (default 50) messages are replayed when you join a room (stored in MongoDB)
 
 ## Requirements
 
@@ -34,24 +34,24 @@ Then open **http://localhost:3000** in your browser. To test real-time chat, ope
 
 The server binds to `process.env.PORT || 3000` on host `0.0.0.0`.
 
-## Message history (MongoDB) — optional
+## Message history (MongoDB)
 
-History is **opt-in**. With no database the app runs exactly as before (live, in-memory). To enable persistence:
+Chat messages are persisted to MongoDB. When you join a room, the last
+`HISTORY_LIMIT` (default 50) messages are replayed before any live ones.
+On boot you'll see `[db] Connected to MongoDB — chat history enabled.`
 
-1. Copy `.env.example` to `.env` and set your MongoDB Atlas connection string:
+This is a **demo app**, so the MongoDB Atlas connection string is hardcoded
+in **`db.js`** for convenience — no environment setup needed, just
+`npm start`. For a real deployment, move that string into an environment
+variable and rotate the credentials.
 
-   ```bash
-   MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/roomchat?appName=Cluster0
-   HISTORY_LIMIT=50   # optional, default 50
-   ```
+Messages live in a `messages` collection (`{ room, username, text, ts }`,
+indexed on `{ room, ts }`). Only chat messages are persisted — join/leave
+notices and typing indicators stay ephemeral. If the database is
+unreachable, the server logs a warning and keeps serving live chat (no
+crash).
 
-2. `npm start`. On boot you'll see `[db] Connected to MongoDB — chat history enabled.`
-
-Messages are stored in a `messages` collection (`{ room, username, text, ts }`, indexed on `{ room, ts }`). Only chat messages are persisted — join/leave notices and typing indicators stay ephemeral. If the database is unreachable, the server logs a warning and keeps serving live chat (no crash).
-
-`.env` is gitignored — **never commit your credentials**. On Render, set `MONGODB_URI` (and optionally `HISTORY_LIMIT`) in the service's **Environment** settings.
-
-To run the end-to-end history test (requires `MONGODB_URI`):
+To run the end-to-end history test:
 
 ```bash
 npm test
@@ -61,11 +61,11 @@ npm test
 
 - **`server.js`** — Express serves the static `public/` folder and Socket.IO handles the realtime events:
   - `joinRoom { username, room }` → joins the Socket.IO room, stores the user, rejects duplicate names in that room
-  - `chatMessage { text }` → broadcast to that room only, then persisted (if a DB is configured)
+  - `chatMessage { text }` → broadcast to that room only, then persisted to MongoDB
   - `typing <bool>` → relayed to others in the room
   - `disconnect` → removes the user, notifies the room, deletes the room if empty
-  - On `joinRoom`, the server replays the room's recent history to the joining socket via a `history` event (when a DB is configured)
-- **`db.js`** — owns the Mongoose connection (`connectDB`, `isDbReady`) and the `Message` model. Connection failure is non-fatal: the app degrades to live-only chat.
+  - On `joinRoom`, the server replays the room's recent history to the joining socket via a `history` event
+- **`db.js`** — owns the Mongoose connection (`connectDB`, `isDbReady`) and the `Message` model. The Atlas URI is hardcoded here (demo app). Connection failure is non-fatal: the app degrades to live-only chat.
 - **`public/`** — plain HTML/CSS/vanilla JS. The client connects with a bare `io()` (same origin), so it works both locally and on a deployed domain. A `history` handler renders replayed messages before any live ones.
 - **Live state** is in-memory: `rooms` is a `Map<roomName, Map<socketId, username>>` (presence resets on restart). **Message history** is in MongoDB when configured, so conversations survive restarts.
 
@@ -84,11 +84,11 @@ This app is ready to deploy on [Render.com](https://render.com) as a Node **Web 
    - **Health Check Path:** `/`
 4. Deploy. Render auto-redeploys on every push to your main branch.
 
-To enable persistent history on Render, add a **`MONGODB_URI`** environment variable (and optionally `HISTORY_LIMIT`) in the service's **Environment** settings, pointing at a MongoDB Atlas cluster.
+The MongoDB connection string is hardcoded in `db.js`, so no extra Render configuration is needed for history to work.
 
 **Free-tier caveats:**
 - The service **spins down after ~15 minutes of inactivity**, so the first request after idle is slow while it wakes up.
-- **Presence** (who's currently in a room) is in memory and **resets when the service restarts or spins down**. **Message history** persists in MongoDB when `MONGODB_URI` is set; without it, messages are not retained across restarts.
+- **Presence** (who's currently in a room) is in memory and **resets when the service restarts or spins down**. **Message history** persists in MongoDB, so past messages survive restarts.
 
 ## How this app was built
 

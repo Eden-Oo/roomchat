@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
 
+// Example/demo app: the connection string is hardcoded here for convenience.
+// For a real deployment, move this to an environment variable instead.
+const MONGODB_URI = 'mongodb+srv://edenrefdata_db_user:nOMdgZgU3KjCSxxJ@cluster0.pfnbt1n.mongodb.net/roomchat?appName=Cluster0';
+
 // How many recent messages to replay when a user joins a room.
-const HISTORY_LIMIT = Number(process.env.HISTORY_LIMIT) || 50;
+const HISTORY_LIMIT = 50;
 
 // ---------- Message model ----------
 // A single chat message. System notices and typing state are intentionally
@@ -28,13 +32,8 @@ function isDbReady() {
 }
 
 async function connectDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.warn('[db] MONGODB_URI not set — running without persistence (live chat only).');
-    return;
-  }
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(MONGODB_URI);
     dbReady = true;
     console.log('[db] Connected to MongoDB — chat history enabled.');
   } catch (err) {

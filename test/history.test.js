@@ -2,9 +2,8 @@
 //   1. user A joins a room and sends a message (which gets persisted)
 //   2. user B joins the same room and must receive that message via 'history'
 //
-// Run with a real MONGODB_URI set (loaded from .env). If no DB is
-// configured the test self-skips, matching the app's graceful degradation.
-require('dotenv').config();
+// Connects using the hardcoded URI in db.js. If the DB is unreachable the
+// test self-skips, matching the app's graceful degradation.
 const assert = require('assert');
 const { io: ioClient } = require('socket.io-client');
 const { connectDB, isDbReady, Message } = require('../db');
