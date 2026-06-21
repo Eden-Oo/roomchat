@@ -1,7 +1,9 @@
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { connectDB, isDbReady, Message, HISTORY_LIMIT } = require('./db');
 
 const app = express();
 const server = http.createServer(app);
@@ -63,7 +65,7 @@ function leaveCurrentRoom(socket) {
 
 // ---------- Socket.IO ----------
 io.on('connection', (socket) => {
-  socket.on('joinRoom', (payload) => {
+  socket.on('joinRoom', async (payload) => {
     const username = (payload && typeof payload.username === 'string') ? payload.username.trim() : '';
     const room = (payload && typeof payload.room === 'string') ? payload.room.trim() : '';
 
@@ -84,6 +86,25 @@ io.on('connection', (socket) => {
 
     // Confirm to the joining client, then announce presence to the room.
     socket.emit('joined', { room, username });
+
+    // Replay recent history to the joining socket only (before live messages).
+    if (isDbReady()) {
+      try {
+        const recent = await Message.find({ room })
+          .sort({ ts: -1 })
+          .limit(HISTORY_LIMIT)
+          .lean();
+        recent.reverse(); // back to chronological order
+        socket.emit('history', recent.map((m) => ({
+          username: m.username,
+          text: m.text,
+          ts: new Date(m.ts).getTime(),
+        })));
+      } catch (err) {
+        console.warn('[db] Failed to load history:', err.message);
+      }
+    }
+
     io.to(room).emit('userList', userList(room));
     socket.to(room).emit('systemNotice', systemNotice(`${username} joined`));
   });
@@ -96,12 +117,18 @@ io.on('connection', (socket) => {
     const text = (typeof raw === 'string' ? raw : (raw && raw.text) || '').trim();
     if (!text) return; // ignore empty sends
 
+    const ts = Date.now();
+
     // Broadcast to everyone in this room only (including the sender).
-    io.to(room).emit('chatMessage', {
-      username,
-      text,
-      ts: Date.now(),
-    });
+    io.to(room).emit('chatMessage', { username, text, ts });
+
+    // Persist for history. Fire-and-forget: a save failure must never
+    // affect the live broadcast that already went out above.
+    if (isDbReady()) {
+      Message.create({ room, username, text, ts: new Date(ts) }).catch((err) => {
+        console.warn('[db] Failed to save message:', err.message);
+      });
+    }
   });
 
   socket.on('typing', (isTyping) => {
@@ -128,8 +155,11 @@ io.on('connection', (socket) => {
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0';
-  server.listen(PORT, HOST, () => {
-    console.log(`roomchat server listening on http://${HOST}:${PORT}`);
+  // Connect to MongoDB first (non-fatal if unavailable), then start serving.
+  connectDB().finally(() => {
+    server.listen(PORT, HOST, () => {
+      console.log(`roomchat server listening on http://${HOST}:${PORT}`);
+    });
   });
 }
 

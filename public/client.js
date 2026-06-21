@@ -95,6 +95,11 @@
       showChatView(data.room, data.username);
     });
 
+    // Recent history replayed once on join, before any live messages.
+    socket.on('history', function (msgs) {
+      (msgs || []).forEach(renderMessage);
+    });
+
     socket.on('chatMessage', function (msg) {
       renderMessage(msg);
     });
